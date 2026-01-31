@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NodeAL Guardian Console</title>
+    <style>
+        body { background: #111; color: #0f0; font-family: monospace; padding: 20px; max-width: 800px; margin: 0 auto; }
+        h1 { border-bottom: 1px solid #333; }
+        #chat-log { height: 400px; overflow-y: scroll; border: 1px solid #333; padding: 10px; margin-bottom: 10px; background: #000; white-space: pre-wrap; }
+        #input-area { display: flex; gap: 10px; }
+        input { flex: 1; background: #222; border: 1px solid #333; color: #fff; padding: 10px; font-family: monospace; }
+        button { background: #004400; color: #0f0; border: 1px solid #0f0; padding: 10px; cursor: pointer; }
+        button:hover { background: #006600; }
+        .error { color: red; }
+        .system { color: #888; }
+    </style>
+</head>
+<body>
+    <h1>🛡️ NodeAL Guardian Console</h1>
+    <p>Use this console if the main App UI crashes. Direct link to AI Core.</p>
+    
+    <div id="chat-log"></div>
+    
+    <div id="input-area">
+        <input type="text" id="msg-input" placeholder="Type command (e.g., 'rollback' or 'fix syntax error')..." autofocus>
+        <button onclick="sendMessage()">SEND</button>
+    </div>
+
+    <script>
+        const log = document.getElementById('chat-log');
+        const input = document.getElementById('msg-input');
+        let history = []; // Håll historik lokalt i denna session
+
+        function appendLog(role, text) {
+            log.innerHTML += `<div class="${role}"><strong>${role.toUpperCase()}:</strong> ${text}</div><br>`;
+            log.scrollTop = log.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const text = input.value;
+            if (!text) return;
+            
+            appendLog('user', text);
+            input.value = '';
+            
+            // Uppdatera historik
+            history.push({ role: 'user', content: text });
+
+            try {
+                const res = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ messages: history })
+                });
+                
+                const data = await res.json();
+                
+                if (data.error) {
+                    appendLog('error', data.error);
+                } else {
+                    const reply = data.response;
+                    appendLog('ai', reply);
+                    history.push({ role: 'assistant', content: reply });
+                    
+                    // Om backend skickar uppdaterad historik (från tools)
+                    if (data.history) history = data.history;
+                }
+            } catch (e) {
+                appendLog('error', 'Connection failed: ' + e.message);
+            }
+        }
+
+        // Låt Enter skicka
+        input.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+    </script>
+</body>
+</html>

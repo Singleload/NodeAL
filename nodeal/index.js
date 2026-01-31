@@ -5,8 +5,9 @@ const OpenAI = require('openai');
 const { tools, toolDefinitions } = require('./tools');
 
 const app = express();
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.json());
-app.use(express.static('../app/dist')); // Om du bygger en React frontend, serva den härifrån eller via proxy
+app.use(express.static('../app/dist'));
 
 const openai = new OpenAI({
   baseURL: "https://openrouter.ai/api/v1",
