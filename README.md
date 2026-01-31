@@ -31,7 +31,7 @@ The project is split into two distinct parts to separate the *Architect* from th
 
 1.  **Clone the repository:**
     ```bash
-    git clone https://github.com/your-username/nodeal.git
+    git clone https://github.com/singleload/nodeal.git
     cd nodeal
     ```
 
