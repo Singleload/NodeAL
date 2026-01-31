@@ -2,21 +2,22 @@
 
 **NodeAL** is a recursive AI development environment designed to allow an AI model (via vLLM/OpenRouter) to build, extend, and maintain its own platform.
 
-It utilizes a **Guardian Pattern** architecture to ensure stability: the AI operates on a sandboxed application layer (`/app`) while being supervised by a stable, immutable control layer (`/nodeal`). This allows for safe "surgical" operations on the codebase with automated rollback capabilities.
+It utilizes a **Guardian Pattern** architecture to ensure stability: the AI operates on a sandboxed application layer (`/app`) while being supervised by a stable, immutable control layer (`/nodeal`).
+
+**The project comes pre-shipped with a functional React Chat Interface**, acting as the AI's "body". From here, the AI can read its own source code and evolve itself.
 
 ## 🏗 Architecture
 
-The project is split into two distinct parts to separate the *Architect* from the *Building*:
+The project is split into two distinct parts:
 
 1.  **`/nodeal` (The Guardian)**
     * **Role:** The immutable backend and control center.
-    * **Responsibility:** Communicates with the LLM, executes file system operations, runs terminal commands, and manages Git checkpoints/rollbacks.
+    * **Responsibility:** Communicates with the LLM, executes file system operations, and manages Git checkpoints/rollbacks.
     * **Emergency Console:** Hosts a fail-safe UI at `http://localhost:3001`.
-    * **Stability:** This code is *never* modified by the AI itself.
 
 2.  **`/app` (The Application)**
     * **Role:** The target application (Frontend + Backend).
-    * **Responsibility:** This is the playground. It is built entirely by the AI based on user prompts.
+    * **Status:** Contains a bootstrapped React/Vite Chat UI ready for modification.
     * **Volatility:** The AI has full read/write access here. If the AI breaks the build, NodeAL can roll it back.
 
 ---
@@ -32,27 +33,28 @@ The project is split into two distinct parts to separate the *Architect* from th
 
 1.  **Clone the repository:**
     ```bash
-    git clone https://github.com/singleload/nodeal.git
+    git clone https://github.com/your-username/nodeal.git
     cd nodeal
     ```
 
 2.  **Setup the Guardian (NodeAL):**
+    Install the control layer dependencies.
     ```bash
     cd nodeal
     npm install
     ```
 
 3.  **Setup the App Environment:**
+    The `/app` folder already contains the basic UI. We need to install its dependencies and initialize a local git repo for the AI's rollback feature.
     ```bash
     cd ../app
-    # If app is empty, initialize basic structure
-    npm create vite@latest . -- --template react
     npm install
     
-    # Initialize Git for Rollback functionality (CRITICAL)
+    # Initialize Git for the AI's Rollback capability (CRITICAL)
+    # This allows the Guardian to save/restore states inside the app folder.
     git init
     git add .
-    git commit -m "Initial State"
+    git commit -m "Initial Bootstrapped State"
     ```
 
 4.  **Configure Environment:**
@@ -86,13 +88,16 @@ npm run dev
 ### 3. Evolve the Platform
 Open your browser and navigate to: **`http://localhost:5173`**
 
-You can now chat with the AI through the UI. The AI can read the source code of the app it lives in and modify it in real-time.
+You will see the NodeAL chat interface. Since this interface is part of the `/app` codebase, you can ask the AI to modify it immediately.
+
+**Try this prompt:**
+> *"Read the file src/App.css. Then, change the background color of the chat window to a dark blue theme."*
 
 ---
 
 ## 🚑 Emergency Console & Recovery
 
-**Scenario:** You ask the AI to refactor code, but it makes a syntax error. The React app crashes, and you see a blank screen or an error overlay at `localhost:5173`. You can no longer chat with the AI to fix it.
+**Scenario:** You ask the AI to refactor code, but it makes a syntax error. The React app crashes (White Screen of Death), and you can no longer chat with the AI to fix it.
 
 **Solution: The Guardian Console.**
 
@@ -100,31 +105,17 @@ You can now chat with the AI through the UI. The AI can read the source code of 
 2.  Open a new browser tab and go to: **`http://localhost:3001`**
 3.  This is a static HTML interface served directly by the Guardian. It works even if the React App is broken.
 4.  **Send a command:**
-    * *"Rollback to the last checkpoint"* -> Restores files to working state.
+    * *"Rollback to the last checkpoint"* -> Restores files to the working state.
     * *"You broke App.jsx with a syntax error. Fix it."* -> AI attempts to repair the file blindly.
-
----
-
-## 🛡 Security & Safety
-
-**⚠️ WARNING: Use at your own risk.**
-
-NodeAL gives an AI model direct access to your file system (within the `/app` directory) and the ability to execute shell commands.
-
-1.  **Sandboxing:** The AI is restricted to the `/app` directory by default logic.
-2.  **Command Execution:** The AI can run `npm install`, `rm`, etc. inside the app folder.
-3.  **Checkpoints:** NodeAL automatically creates Git commits before risky operations.
 
 ---
 
 ## 🧩 Modularity & Tools
 
-The AI accesses capabilities through **Tools** defined in `nodeal/tools.js`:
-
-* `read_file` / `write_file`: File manipulation.
-* `run_command`: Terminal execution (npm, node, ls).
-* `create_checkpoint` / `rollback`: Safety net using Git.
-* `list_files`: Context awareness.
+The AI accesses capabilities through **Tools** defined in `nodeal/tools.js`. The AI can read/write any file inside `/app`, allowing it to:
+* Create new backend endpoints (in `/app/server.js` if you ask it to create one).
+* Add new React components.
+* Install new npm packages.
 
 ## 📄 License
 
