@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const OpenAI = require('openai');
+const path = require('path');
 const { tools, toolDefinitions } = require('./tools');
 
 const app = express();
